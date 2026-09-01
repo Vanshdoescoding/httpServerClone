@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <stdio.h>
 
 int main () {
     sockaddr_in server_address{};
@@ -45,11 +46,50 @@ int main () {
     }
     std::cout << "Socket bound to 127.0.0.1:8080\n";
 
-    listen(socket_id, 5) // make the backlog 5
-    accept(socket_id,
-         reinterpret_cast<const sockaddr *>(&server_address), // the reason why we have ot change pointer of server adress (sockaddr_in) to sockaddr is bevcause bind expects it for some reason
-          &sizeof(server_address))
+    int what_the_helly = listen(socket_id, 5); // make the backlog 5
+    
+    if (what_the_helly == -1){
+        std::perror("Listen");
+        close(socket_id);
+        return 1;
+    } 
 
-    close(socket_id);
+    sockaddr_in client_address{};
+    socklen_t client_address_length = sizeof(client_address);
+
+    int client_socket = accept(socket_id,
+         reinterpret_cast< sockaddr *>(&client_address), // the reason why we have ot change pointer of server adress (sockaddr_in) to sockaddr is bevcause bind expects it for some
+          &client_address_length);
+
+    if (client_socket == -1)
+    {
+        std::perror("accept");
+        close(socket_id);
+        return 1;
+    }
+
+    char buffer_1[4096]{};
+
+    ssize_t bytes_received = recv(client_socket, buffer_1, sizeof(buffer_1), 0);
+
+    if (bytes_received == -1){
+
+        std::perror("recv");
+        close(client_socket);
+        close(socket_id);
+        return 1;
+    } 
+    if (bytes_received == 0){ // the client side of things are already close 
+        close(client_socket);
+        close(socket_id); 
+        return 0;
+    } 
+
+    std::cout.write(buffer_1, bytes_received);
+
+
+   close(client_socket);
+  close(socket_id);
+    
     return 0;
 }
