@@ -85,11 +85,25 @@ int main () {
         return 0;
     } 
 
+
+
     std::cout.write(buffer_1, bytes_received);
+   
+    char message[] = "HTTP/1.1 200 OK\r\n Content-Type: text/plain\r\n Content-Length: 5\r\n Connection: close\r\n \r\n\r\n Hello\r\n";
+    ssize_t send_success = send(client_socket, 
+        message, 
+        sizeof(message) - 1, 
+        0);
+
+        if (send_success == -1){
+            std::perror("send");
+            close(client_socket);
+            close(socket_id);
+        }
 
 
    close(client_socket);
-  close(socket_id);
+   close(socket_id);
     
     return 0;
 }
