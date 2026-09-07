@@ -16,6 +16,11 @@ int main () {
         "127.0.0.1", // tells u which computer 
         &server_address.sin_addr // which computer (binary form of 127.0.0.1)
     );
+    struct Http_Request {
+        std::string method;
+        std::string path;
+        std::string version;
+    };
 
     if (conversion_result != 1)
     {
@@ -85,7 +90,24 @@ int main () {
         return 0;
     } 
 
+    std::string request(buffer_1, bytes_received);
+    std::cout << request << '\n';
+    
+    std::size_t request_line_end = request.find("\r\n");
+    if (request_line_end == std::string::npos){
+        std::perror("requestline");
+        return -1;
+    }
 
+    std::string request_line = request.substr(0, request_line_end);
+
+    
+    std::size_t first_space = request_line.find(' ');
+    std::size_t second_space = request_line.find(' ', first_space + 1);
+
+    Http_Request http_request{request_line.substr(0,first_space),
+                              request_line.substr(first_space + 1,  second_space - first_space - 1),
+                              request_line.substr(second_space + 1, request_line_end - second_space  - 1)}; 
 
     std::cout.write(buffer_1, bytes_received);
    
